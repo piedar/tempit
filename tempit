@@ -1,0 +1,65 @@
+#!/usr/bin/python3
+# SPDX-License-Identifier: AGPL-3.0-only
+
+from pathlib import Path
+
+# todo: hopefully this will all be handled in the kernel someday
+# see https://lwn.net/ml/all/20250308183812.118311-2-srinivas.pandruvada@linux.intel.com/
+
+
+temp_limit_max = 95
+
+def find_tcc():
+    thermal = Path('/sys/class/thermal')
+    for device in thermal.glob('cooling_device*'):
+        device_type = (device / 'type').read_text().strip()
+        if device_type == 'TCC Offset':
+            return device
+
+def hold_tcc(tcc):
+    tjmax = 100
+    cur_state = (tcc / 'cur_state')
+    def get_tcc_limit():
+        offset = int(cur_state.read_text().strip())
+        return tjmax - offset
+    def set_tcc_limit(limit):
+        offset = tjmax - limit
+        cur_state.write_text(str(offset))
+
+
+    from datetime import datetime, timedelta
+    from time import sleep
+
+    temp_limit = None
+    last_adjustment = None
+
+    while True:
+        temp_limit_cur = get_tcc_limit()
+        if temp_limit_cur != temp_limit:
+            if temp_limit is None:
+                temp_limit = temp_limit_max # first time
+            else:
+                temp_limit -= 1
+                last_adjustment = datetime.now()
+
+            print(f"adjusting temperature limit {temp_limit_cur} to target {temp_limit}")
+            set_tcc_limit(temp_limit)
+        else:
+            if temp_limit < temp_limit_max and last_adjustment is not None and datetime.now() > (last_adjustment + timedelta(minutes = 5)):
+                temp_limit += 1
+                last_adjustment = datetime.now()
+                print(f"raising temperature limit {temp_limit_cur} to target {temp_limit}")
+                set_tcc_limit(temp_limit)
+
+        sleep(5)
+
+
+tcc = find_tcc()
+
+if tcc is None:
+    print('tcc not found - other methods not yet implemented')
+    sys.exit(2)
+
+print('tcc', tcc)
+
+hold_tcc(tcc)
