@@ -1,13 +1,14 @@
 #!/usr/bin/python3
 # SPDX-License-Identifier: AGPL-3.0-only
 
+import os
 from pathlib import Path
 
 # todo: hopefully this will all be handled in the kernel someday
 # see https://lwn.net/ml/all/20250308183812.118311-2-srinivas.pandruvada@linux.intel.com/
 
 
-temp_limit_max = 95
+temp_limit_max = int(os.environ.get('TEMPIT_MAX', 95))
 
 
 class CoolingDevice:
