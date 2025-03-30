@@ -67,25 +67,23 @@ def hold_tcc(tcc):
     while True:
         temp_limit_cur = get_tcc_limit()
 
-        def adjust_limit(temp_limit_new):
-            last_adjustment = datetime.now()
-            print(f"adjusting temperature limit from {temp_limit_cur} to {temp_limit_new}")
-            set_tcc_limit(temp_limit_new)
-            temp_limit = temp_limit_new
-
         if temp_limit_cur != temp_limit:
             if ready_for_auto_lower():
                 # sometimes the TCC offset resets to 0 possibly because the CPU hits its own limit despite our efforts
                 # compensate by lowering the target temperature automatically
                 temp_limit -= 1
                 last_auto_lower = datetime.now()
-            adjust_limit(temp_limit)
+            print(f"adjusting temperature limit from {temp_limit_cur} to {temp_limit}")
+            set_tcc_limit(temp_limit)
+            last_adjustment = datetime.now()
         else:
             if temp_limit < temp_limit_max and ready_for_auto_higher():
                 # we lowered the target temperature automatically a while ago
                 # try loosening this restriction and see if things stabilize
                 temp_limit += 1
-                adjust_limit(temp_limit)
+                print(f"adjusting temperature limit from {temp_limit_cur} to {temp_limit}")
+                set_tcc_limit(temp_limit)
+                last_adjustment = datetime.now()
         sleep(5)
 
 
