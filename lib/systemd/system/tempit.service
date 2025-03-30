@@ -1,0 +1,43 @@
+# SPDX-License-Identifier: AGPL-3.0-only
+
+[Unit]
+Description=Keeps CPU temperature under control
+
+[Service]
+Type=simple
+#Environment="TEMPIT_MAX=95"
+ExecStart=tempit
+
+# hardening
+CapabilityBoundingSet=
+DeviceAllow=
+LockPersonality=true
+MemoryDenyWriteExecute=true
+NoNewPrivileges=true
+PrivateDevices=true
+PrivateMounts=true
+PrivateTmp=true
+PrivateUsers=true
+ProcSubset=pid
+ProtectClock=true
+ProtectControlGroups=true
+ProtectHome=true
+ProtectHostname=true
+ProtectKernelLogs=true
+ProtectKernelModules=true
+ProtectKernelTunables=true
+# must allow write to /sys/...
+ProtectKernelTunables=false
+ProtectProc=invisible
+ProtectSystem=strict
+RemoveIPC=true
+RestrictAddressFamilies=none
+RestrictNamespaces=true
+RestrictRealtime=true
+RestrictSUIDSGID=true
+SystemCallArchitectures=native
+SystemCallFilter=@system-service
+SystemCallErrorNumber=EPERM
+
+[Install]
+WantedBy=basic.target
